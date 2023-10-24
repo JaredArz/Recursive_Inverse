@@ -2,33 +2,43 @@ module MTJ_Types
 
     export SHE_MTJ, sample, set_dev
 
-    abstract type MTJ end
-    abstract type noisy end
-    abstract type device_param end
-
-    struct noisy  end
-    struct device_param end
-
-    mutable struct SHE_MTJ <: MTJ
-        Ki    :: Union{Float64, noisy, device_param}
-        Ms    :: Union{Float64, device_param}
-        J_SHE :: Float64
-
-        theta :: Float64 
-        phi   :: Float64
-
-        noise :: Float64
-        SHE_MTJ(device_var_flag) = (device_var_flag == 1 ? new(5e11,1e6,π/10,0,0.05) :
-                                                           new(5e11,1e6,π/10,0,1))
+    struct _DeviceParam <: AbstractFloat
+        x::Float64
+    end
+    struct _Noisy <: _DeviceParam
+        x::Float64
     end
 
-    add_noise(x::Union{Float64,noisy}, n::Float64) = n*x 
-    add_noise(x::Float64, n::Float64) = x
+    # _NoisyParam = Union{_Noisy, _DeviceParam}
 
-    function set_dev!(MTJ::MTJ, ;kwargs...)
+    abstract type _MTJ end
+    abstract type Param <: Abstract end
+
+    mutable struct SHE_MTJ <: _MTJ
+        Ki    :: _Noisy
+        Ms    :: _DeviceParam
+        J_SHE :: Float64
+
+        SHE_MTJ() = new(1.0, 1.0, 1.0)
+    end
+
+
+    add_noise(x::Float64) = x*21341.0 
+    function _update_dev!(MTJ::_MTJ, key::Symbol, value::Float64)
+        display(key)
+        display(getfield(MTJ,key))
+        if isa( getfield(MTJ,key), _Noisy)
+            return setfield!(MTJ, key, _Noisy(add_noise(value)))
+        elseif isa( getfield(MTJ,key), _DeviceParam)
+                return setfield!(MTJ, key, _DeviceParam(value))
+        else
+            return setfield!(MTJ, key, value)
+        end
+    end
+
+    function set_dev!(MTJ::_MTJ, ;kwargs...)
         for (key, value) in kwargs
-            value = add_noise(value, MTJ.noise)
-            setfield!(MTJ, key, value)
+            _update_dev!(MTJ, key, value)
         end
     end
 
@@ -40,12 +50,12 @@ module MTJ_Types
     #    #LLG
     #end
 
-    function Base.show(io::IO, MTJ::MTJ)
+    function Base.show(io::IO, MTJ::_MTJ)
         # type inference cannot occur here
         print(io, "Device Parameters:\n")
         for i in fieldnames(typeof(MTJ))
-            if typeof(getfield(MTJ,i)) <: device_param
-                print(io,i,": ", getfield(MTJ,i),"\n")
+            if isa(getfield(MTJ,i), _DeviceParam)
+                print(io,i,": ", getfield(MTJ,i).x,"\n")
             end
         end
     end
