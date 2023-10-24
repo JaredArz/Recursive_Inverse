@@ -1,6 +1,7 @@
 
 include("./mtj.jl")
 
-dev = MTJ_Types.SHE_MTJ()
-MTJ_Types.set_dev!(dev, Ki=1.0)
+dev = MTJ_Types.SHE_MTJ(1)
+MTJ_Types.set_dev!(dev, Ms=1.0)
+display(typeof(dev.Ki))
 display(dev)
