@@ -2,17 +2,15 @@ module MTJ_Types
 
     export SHE_MTJ, sample, set_dev
 
-    struct _DeviceParam <: AbstractFloat
-        x::Float64
-    end
-    struct _Noisy <: _DeviceParam
-        x::Float64
-    end
-
-    # _NoisyParam = Union{_Noisy, _DeviceParam}
-
     abstract type _MTJ end
-    abstract type Param <: Abstract end
+    abstract type _Param <: AbstractFloat end
+
+    struct _DeviceParam <: _Param
+        x::Float64
+    end
+    struct _Noisy <: _Param
+        x::Float64
+    end
 
     mutable struct SHE_MTJ <: _MTJ
         Ki    :: _Noisy
@@ -22,11 +20,8 @@ module MTJ_Types
         SHE_MTJ() = new(1.0, 1.0, 1.0)
     end
 
-
     add_noise(x::Float64) = x*21341.0 
     function _update_dev!(MTJ::_MTJ, key::Symbol, value::Float64)
-        display(key)
-        display(getfield(MTJ,key))
         if isa( getfield(MTJ,key), _Noisy)
             return setfield!(MTJ, key, _Noisy(add_noise(value)))
         elseif isa( getfield(MTJ,key), _DeviceParam)
@@ -54,7 +49,7 @@ module MTJ_Types
         # type inference cannot occur here
         print(io, "Device Parameters:\n")
         for i in fieldnames(typeof(MTJ))
-            if isa(getfield(MTJ,i), _DeviceParam)
+            if isa(getfield(MTJ,i), _Param)
                 print(io,i,": ", getfield(MTJ,i).x,"\n")
             end
         end
