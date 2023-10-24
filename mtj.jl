@@ -5,16 +5,16 @@ module MTJ_Types
     abstract type _MTJ end
     abstract type _Param <: AbstractFloat end
 
-    struct _DeviceParam <: _Param
+    struct _ConstParam <: _Param
         x::Float64
     end
-    struct _Noisy <: _Param
+    struct _NoisyParam <: _Param
         x::Float64
     end
 
     mutable struct SHE_MTJ <: _MTJ
-        Ki    :: _Noisy
-        Ms    :: _DeviceParam
+        Ki    :: _NoisyParam
+        Ms    :: _ConstParam
         J_SHE :: Float64
 
         SHE_MTJ() = new(1.0, 1.0, 1.0)
@@ -22,10 +22,10 @@ module MTJ_Types
 
     add_noise(x::Float64) = x*21341.0 
     function _update_dev!(MTJ::_MTJ, key::Symbol, value::Float64)
-        if isa( getfield(MTJ,key), _Noisy)
-            return setfield!(MTJ, key, _Noisy(add_noise(value)))
-        elseif isa( getfield(MTJ,key), _DeviceParam)
-                return setfield!(MTJ, key, _DeviceParam(value))
+        if isa( getfield(MTJ,key), _NoisyParam)
+            return setfield!(MTJ, key, _NoisyParam(add_noise(value)))
+        elseif isa( getfield(MTJ,key), _ConstParam)
+                return setfield!(MTJ, key, _ConstParam(value))
         else
             return setfield!(MTJ, key, value)
         end
