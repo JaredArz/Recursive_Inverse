@@ -25,7 +25,7 @@ module MTJ_Types
         if isa( getfield(MTJ,key), _NoisyParam)
             return setfield!(MTJ, key, _NoisyParam(add_noise(value)))
         elseif isa( getfield(MTJ,key), _ConstParam)
-                return setfield!(MTJ, key, _ConstParam(value))
+            return setfield!(MTJ, key, _ConstParam(value))
         else
             return setfield!(MTJ, key, value)
         end
@@ -41,9 +41,13 @@ module MTJ_Types
         #LLG
     end
 
-    #function sample(MTJ::STT_MTJ)
-    #    #LLG
-    #end
+    function sample(MTJ::STT_MTJ)
+        #LLG
+    end
+
+    function sample(MTJ::VCMA_MTJ)
+        #LLG
+    end
 
     function Base.show(io::IO, MTJ::_MTJ)
         # type inference cannot occur here
